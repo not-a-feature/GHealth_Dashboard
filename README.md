@@ -4,8 +4,8 @@ A private dashboard for your Google Health data — steps, sleep, heart rate,
 workouts and more — pulled straight from the **Google Health API** into your
 browser.
 
-**Plain static site.** The `public/` files talk to Google's OAuth and Health
-API directly from the browser. Your credentials, tokens and cached data live
+**Plain static site.** The files talk to Google's OAuth and Health API
+directly from the browser. Your credentials, tokens and cached data live
 only in local storage — no server involved.
 
 **Demo mode:** append `?demo=1` to the URL to try the UI with sample data —
@@ -14,12 +14,13 @@ no Google account needed.
 ## Run it
 
 ```
-python -m http.server 8180 -d public
-# or: npx serve public
+python -m http.server 8180
+# or: npx serve
 ```
 
-Or host `public/` anywhere (GitHub Pages, Netlify, your own server) and
-register that exact URL in your OAuth client's origins/redirect URIs.
+Or host it anywhere (GitHub Pages, Netlify, your own server) and register that
+exact URL in your OAuth client's origins/redirect URIs. Live demo:
+<https://not-a-feature.github.io/GHealth_Dashboard/>.
 
 ## One-time Google setup
 
@@ -67,8 +68,8 @@ register that exact URL in your OAuth client's origins/redirect URIs.
 ## Layout
 
 ```
-public/index.html     app shell: setup → sign-in → dashboard → detail pages
-public/styles.css     light/dark theme
-public/js/app/        OAuth PKCE flow, API client, caching, rendering
-public/js/charts/     hand-rolled SVG charts
+index.html     app shell: setup → sign-in → dashboard → detail pages
+styles.css     light/dark theme
+js/app/        OAuth PKCE flow, API client, caching, rendering
+js/charts/     hand-rolled SVG charts
 ```

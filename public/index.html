@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Health Dashboard</title>
+<!-- speed: open TLS connections to Google before the first API call -->
+<link rel="preconnect" href="https://health.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://oauth2.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://accounts.google.com">
+<!-- relative URLs so the app works from a sub-path (e.g. GitHub Pages project sites) -->
+<link rel="stylesheet" href="./styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+<script type="module" src="./js/app/main.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <h1>Health Dashboard</h1>
+      <span class="brand-note">for your Google Health data</span>
+    </div>
+    <div class="topbar-actions">
+      <button id="btn-theme" class="ghost-btn theme-btn" title="Theme">
+        <span id="theme-icon" class="theme-icon" aria-hidden="true"></span>
+        <span id="theme-label">Auto</span>
+      </button>
+      <button id="btn-refresh" class="ghost-btn hidden" title="Re-fetch all data">Refresh</button>
+      <button id="btn-signout" class="ghost-btn hidden">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="banner" class="banner hidden" role="alert"></div>
+
+  <!-- First-run setup -->
+  <section id="view-setup" class="view hidden">
+    <div class="onboard-card">
+      <div class="onboard-hero" aria-hidden="true">
+        <span class="hero-dot d1"></span><span class="hero-dot d2"></span><span class="hero-dot d3"></span>
+      </div>
+      <h2>Your health data, on your terms</h2>
+      <p class="lede">Steps, sleep, heart rate and workouts — fetched straight from the
+        <strong>Google Health API</strong> into this browser. There is no server and no account
+        with us: your credentials, tokens and cached data never leave this device.</p>
+      <div class="feature-row" aria-hidden="true">
+        <span class="feature-pill"><span class="tile-key" style="background:var(--c-steps)"></span>Today at a glance</span>
+        <span class="feature-pill"><span class="tile-key" style="background:var(--c-azm)"></span>90-day trends</span>
+        <span class="feature-pill"><span class="tile-key" style="background:var(--c-hr)"></span>Workouts with GPS maps</span>
+        <span class="feature-pill"><span class="tile-key" style="background:var(--c-weight)"></span>Sleep stages &amp; schedule</span>
+      </div>
+
+      <details class="setup-details" open>
+        <summary>Create your free Google API credentials <span class="summary-sub">one-time, ~3 minutes — every step is one click away</span></summary>
+        <ol class="steps guided-steps">
+          <li>
+            <div class="step-row">
+              <span class="step-text"><strong>Create a project</strong> — any name works, it's private to you.
+                Copy the <em>project ID</em> Google assigns (shown right under the name field)
+                and paste it here so the next steps link straight into your project:</span>
+              <a class="step-link" href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Create project ↗</a>
+            </div>
+            <input id="in-project-id" class="project-id-input" type="text" autocomplete="off" spellcheck="false"
+                   placeholder="project ID, e.g. my-health-dashboard-462315" aria-label="Google Cloud project ID">
+          </li>
+          <li>
+            <div class="step-row">
+              <span class="step-text"><strong>Enable the Google Health API</strong> — the page that opens has a
+                single <em>Enable</em> button.</span>
+              <a id="lnk-enable-api" class="step-link" href="https://console.cloud.google.com/flows/enableapi?apiid=health.googleapis.com" target="_blank" rel="noopener">Enable API ↗</a>
+            </div>
+          </li>
+          <li>
+            <div class="step-row">
+              <span class="step-text"><strong>Configure the consent screen</strong> — User type
+                <em>External</em>; an app name and your email are enough.</span>
+              <a id="lnk-consent" class="step-link" href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" rel="noopener">Consent screen ↗</a>
+            </div>
+          </li>
+          <li>
+            <div class="step-row">
+              <span class="step-text"><strong>Add your own Google account as a test user</strong> —
+                the most-missed step: without it Google refuses the sign-in with
+                <em>access_denied</em>.</span>
+              <a id="lnk-test-users" class="step-link" href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener">Test users ↗</a>
+            </div>
+          </li>
+          <li>
+            <div class="step-row">
+              <span class="step-text"><strong>Create the OAuth client</strong> — Application type:
+                <strong>Desktop app</strong> when you run this dashboard on <code>localhost</code>;
+                <strong>Web application</strong> when it's hosted on a website (register
+                <code class="setup-origin">this page's URL</code> — details in the hosting notes below).</span>
+              <a id="lnk-oauth-client" class="step-link" href="https://console.cloud.google.com/apis/credentials/oauthclient" target="_blank" rel="noopener">Create client ↗</a>
+            </div>
+          </li>
+          <li>
+            <div class="step-row">
+              <span class="step-text"><strong>Copy the Client ID and Client Secret</strong> into the boxes below — done.
+                Your data stays between Google and this browser.</span>
+            </div>
+          </li>
+        </ol>
+        <p class="fineprint">Heads-up for later: because this is your own private Cloud project, Google shows an
+          <em>“unverified app”</em> warning during sign-in. That's expected — it's your app;
+          choose <em>Continue</em>.</p>
+      </details>
+
+      <form id="setup-form">
+        <label>OAuth Client ID
+          <input id="in-client-id" name="ghd-api-client-id" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="1234567890-xxxxxxxx.apps.googleusercontent.com" required>
+        </label>
+        <label>OAuth Client Secret
+          <!-- autocomplete="new-password": stops Firefox's password manager from
+               silently autofilling saved (Google) logins into this field -->
+          <input id="in-client-secret" name="ghd-api-client-secret" type="password" autocomplete="new-password"
+                 placeholder="GOCSPX-…">
+          <span class="hint">Stored only in this browser's local storage. For a Desktop-type client
+            this value is not treated as confidential by Google, but keep it to yourself anyway.</span>
+        </label>
+        <div class="onboard-actions">
+          <button type="submit" class="primary-btn">Save &amp; continue</button>
+          <a class="demo-link" href="?demo=1">No credentials yet? Explore the demo →</a>
+        </div>
+      </form>
+
+      <details class="setup-details fineprint-details">
+        <summary>Hosting &amp; sign-in notes</summary>
+        <p class="fineprint"><strong>Hosting this on the web</strong> (GitHub Pages etc.): create the OAuth client as type
+          <em>Web application</em> and register this page's exact URL —
+          <code class="setup-origin">https://you.github.io/dashboard/</code> — under both
+          <em>Authorized JavaScript origins</em> (origin only) and <em>Authorized redirect URIs</em>.</p>
+        <p class="fineprint"><strong>Sign-in expires after ~7 days</strong> while your Cloud project's consent screen
+          is in <em>Testing</em> mode. That's a Google limit for test apps — just sign in again.</p>
+        <p class="fineprint"><strong>Google shows an error page mid-sign-in?</strong> Some browser profiles
+          (seen with Firefox extensions/site data) break Google's consent page itself. Try a private
+          window or another browser — the dashboard works fine in any of them afterwards.</p>
+        <p class="fineprint"><strong><em>access_denied</em>?</strong> Your Google account isn't on the consent
+          screen's test-user list yet (step 4 above).</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- Sign in -->
+  <section id="view-signin" class="view hidden">
+    <div class="onboard-card center">
+      <div class="onboard-hero" aria-hidden="true">
+        <span class="hero-dot d1"></span><span class="hero-dot d2"></span><span class="hero-dot d3"></span>
+      </div>
+      <h2>Sign in with Google</h2>
+      <p class="lede">You'll be sent to Google to approve <strong>read-only</strong> access.
+        Tokens are stored only in this browser — nothing is sent anywhere else.</p>
+      <div class="scope-chips" aria-label="Access that will be requested">
+        <span class="scope-chip"><span class="tile-key" style="background:var(--c-steps)"></span>Activity &amp; workouts</span>
+        <span class="scope-chip"><span class="tile-key" style="background:var(--sleep-deep)"></span>Sleep</span>
+        <span class="scope-chip"><span class="tile-key" style="background:var(--c-hr)"></span>Health measurements</span>
+        <span class="scope-chip"><span class="tile-key" style="background:var(--c-azm)"></span>Location (GPS routes)</span>
+      </div>
+      <ol class="steps expect-steps">
+        <li>Pick the Google account your device syncs to.</li>
+        <li>Google warns the app is <em>unverified</em> — it's your own Cloud project,
+          so choose <em>Continue</em>.</li>
+        <li>Tick the data checkboxes and allow. You'll land right back here.</li>
+      </ol>
+      <button id="btn-signin" class="google-btn">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
+      <div class="signin-alt">
+        <button id="btn-edit-config" class="link-btn">Change API credentials…</button>
+        <a class="link-btn" href="?demo=1">Explore the demo</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="view-dashboard" class="view hidden">
+
+    <div class="section-head trends-head">
+      <div class="section-head-left">
+        <h2>Today</h2>
+        <span id="today-date" class="section-sub"></span>
+      </div>
+      <span id="data-status" class="section-sub"></span>
+    </div>
+    <div id="kpi-row" class="kpi-row" aria-label="Today's key metrics"></div>
+    <div id="today-charts" class="card-grid one-col"></div>
+
+    <div class="section-head trends-head">
+      <h2>Trends</h2>
+      <div class="filter-row" role="group" aria-label="Date range">
+        <div class="segmented" id="range-picker">
+          <button data-days="7">7 days</button>
+          <button data-days="30" class="active">30 days</button>
+          <button data-days="90">90 days</button>
+        </div>
+      </div>
+    </div>
+    <div id="trend-charts" class="card-grid"></div>
+
+    <div class="section-head trends-head">
+      <div class="section-head-left">
+        <h2>Workouts</h2>
+        <span id="workouts-sub" class="section-sub"></span>
+      </div>
+      <div class="wo-filter">
+        <label class="check-pill" for="wo-hide-short">
+          <input type="checkbox" id="wo-hide-short"> Hide short
+        </label>
+        <span id="wo-limits" class="wo-limits hidden">
+          <label>under
+            <select id="wo-min-dur">
+              <option value="3">3 min</option>
+              <option value="5" selected>5 min</option>
+              <option value="10">10 min</option>
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+            </select>
+          </label>
+          <label>or
+            <select id="wo-min-dist">
+              <option value="0.5">0.5 km</option>
+              <option value="1" selected>1 km</option>
+              <option value="2">2 km</option>
+              <option value="5">5 km</option>
+            </select>
+          </label>
+        </span>
+      </div>
+    </div>
+    <div id="workout-list" class="workout-list"></div>
+
+    <p class="fineprint center-text">All data is fetched straight from Google to this browser and cached locally.
+      Nothing is sent anywhere else.</p>
+  </section>
+
+  <!-- Metric detail page (#m/steps, #m/sleep, …) -->
+  <section id="view-detail" class="view hidden">
+    <div class="detail-head">
+      <button id="btn-back" class="ghost-btn">← Back</button>
+      <div>
+        <h2 id="detail-title"></h2>
+        <span id="detail-sub" class="section-sub">last 90 days</span>
+      </div>
+    </div>
+    <div id="detail-body" class="detail-body"></div>
+  </section>
+</main>
+
+</body>
+</html>

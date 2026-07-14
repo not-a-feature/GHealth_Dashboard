@@ -91,10 +91,11 @@
           </li>
           <li>
             <div class="step-row">
-              <span class="step-text"><strong>Create the OAuth client</strong> — Application type:
-                <strong>Desktop app</strong> when you run this dashboard on <code>localhost</code>;
-                <strong>Web application</strong> when it's hosted on a website (register
-                <code class="setup-origin">https://not-a-feature.github.io/GHealth_Dashboard/</code> — details in the hosting notes below).</span>
+              <span class="step-text"><strong>Create the OAuth client</strong> — Application type
+                <strong>Web application</strong>. Register this page's exact URL —
+                <code class="setup-origin">https://not-a-feature.github.io/GHealth_Dashboard/</code> — under both
+                <em>Authorized JavaScript origins</em> (origin only) and <em>Authorized redirect URIs</em> (full URL with the trailing slash).
+                Running on <code>localhost</code> instead? See the hosting notes below.</span>
               <a id="lnk-oauth-client" class="step-link" href="https://console.cloud.google.com/apis/credentials/oauthclient" target="_blank" rel="noopener">Create client ↗</a>
             </div>
           </li>
@@ -131,10 +132,13 @@
 
       <details class="setup-details fineprint-details">
         <summary>Hosting &amp; sign-in notes</summary>
-        <p class="fineprint"><strong>Hosting this on the web</strong> (GitHub Pages etc.): create the OAuth client as type
-          <em>Web application</em> and register this page's exact URL —
-          <code class="setup-origin">https://not-a-feature.github.io/GHealth_Dashboard/</code> — under both
-          <em>Authorized JavaScript origins</em> (origin only) and <em>Authorized redirect URIs</em>.</p>
+        <p class="fineprint"><strong>Running on <code>localhost</code> instead of a hosted site?</strong> Create the OAuth client as type
+          <em>Desktop app</em> (loopback addresses are accepted automatically), or keep the <em>Web application</em> type and
+          register this page's exact URL — <code class="setup-origin">https://not-a-feature.github.io/GHealth_Dashboard/</code> —
+          under both <em>Authorized JavaScript origins</em> (origin only) and <em>Authorized redirect URIs</em>.</p>
+        <p class="fineprint"><strong><em>redirect_uri_mismatch</em>?</strong> The URL registered under <em>Authorized redirect URIs</em>
+          doesn't exactly match this page — it must include the trailing slash and use the <em>Web application</em> client type.
+          Newly-added URIs can take a few minutes to take effect.</p>
         <p class="fineprint"><strong>Sign-in expires after ~7 days</strong> while your Cloud project's consent screen
           is in <em>Testing</em> mode. That's a Google limit for test apps — just sign in again.</p>
         <p class="fineprint"><strong>Google shows an error page mid-sign-in?</strong> Some browser profiles
